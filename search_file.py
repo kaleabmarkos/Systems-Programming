@@ -5,9 +5,9 @@
     # a function to search
     # a function to traverse (in order)
 
-#File parsing and Error Handling
 
 #Main Function
+    #File parsing and Error Handling
 
 class Node:
     def __init__(self, symbol, value, rflag):
@@ -28,7 +28,7 @@ class BinarySearchTree:
     
     def insert(self, symbol, value, rflag):
         if self.node is None:
-            new_node = Node(symbol, value, rflag)
+            self.node = Node(symbol, value, rflag)
         else:
             self.insert_recursivly(self.node, symbol,value, rflag)
     
@@ -46,15 +46,15 @@ class BinarySearchTree:
         else:
             cur_node.mflag = True
     
-    def search(self, node, symbol):
-        self.search_recusive(node,symbol)
+    def search(self, symbol):
+        self.search_recursive(self.node,symbol)
     
     def search_recursive(self, curr_node, symbol):
         if curr_node is None:
             return None
         
         if symbol[:4] == curr_node.symbol:
-            return f'symbol found'
+            return f'{symbol}'
         
         elif symbol[:4] < curr_node.symbol:
             self.search_recursive(curr_node.left, symbol)
@@ -62,22 +62,22 @@ class BinarySearchTree:
         else:
             self.search_recursive(curr_node.right, symbol)
     
-    def traversal(self, node):
-        self.inorder_traversal(node)
+    def inorder_traversal(self):
+        self.inorder_traversal_func(self.node)
     
-    def inorder_traversal(self,curr_node):
+    def inorder_traversal_func(self,curr_node):
         if curr_node:
-            self.inorder_traversal(curr_node.left)
+            self.inorder_traversal_func(curr_node.left)
             print(f"{curr_node.symbol}: {curr_node.value} {curr_node.rflag} {curr_node.mflag} {curr_node.iflag}")
-            self.inorder_traversal(curr_node.right)
+            self.inorder_traversal_func(curr_node.right)
     
-def Main():
+def main():
     def process_sys_dat(bst, dat_file):
         try:
             with open(dat_file,'r') as file:
                 for line in file:
                     parts = line.split()
-                    if len(parts) < 4:
+                    if len(parts) < 3:
                         print('Invalid line format')
                         continue
                     
@@ -85,7 +85,7 @@ def Main():
                     value = parts[1]
                     rflag = parts[2].lower()
 
-                    if not (symbol[0].isalpa()) or len(symbol) > 10 or not all(i.isalnum() or i == '_' for i in symbol):
+                    if not (symbol[0].isalpha()) or len(symbol) > 10 or not all(i.isalnum() or i == '_' for i in symbol):
                         print(f'ERROR: Invalid symbol: {symbol}')
                         continue
 
@@ -98,25 +98,46 @@ def Main():
                     if rflag not in ['true','false']:
                         print(f'ERROR: Invalid rflag: {rflag}')
                         continue
+
                 bst.insert(symbol, value, rflag)
 
         except FileNotFoundError:
             raise    
 
-            
+
+    def process_search_file(bst, search_file):
+        try:
+            with open(search_file,'r') as file:
+                for line in file:
+                    symbol = line.strip()
+                    node = bst.search(symbol)
+                    if node:
+                        print(f'Symbol found: {node}')
+                    else:
+                        print('ERROR: Symbol not found')
         
-    
-    def process_search_file():
-        ...
+        except FileNotFoundError:
+            raise
 
     bst = BinarySearchTree()
 
     try:
         process_sys_dat(bst, 'SYMS.DAT')
     except FileNotFoundError:
-        print("ERROR: File not found")
+        print("ERROR: SYMS.DAT not found")
         return
     
     search_file = input("What is the search file name? ")
-    process_search_file(search_file)
     
+    try:
+        process_search_file(bst, search_file)
+    except FileNotFoundError:
+        print(f"ERROR: {search_file} not found")
+        return
+
+    print('Symbole Table in an in-order traversal')
+    bst.inorder_traversal()
+
+    
+if __name__ == "__main__":
+    main()
