@@ -1,143 +1,378 @@
-#Define a Node class
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+*** NAME : Kaleab Gessese
+*** CLASS : CSc 354
+*** ASSIGNMENT : 01
+*** DUE DATE : 09/18/2024
+*** INSTRUCTOR : HAMER 
+*********************************************************************
+*** DESCRIPTION : 
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-#Define a BinarySearchTree class
-    # a function to insert
-    # a function to search
-    # a function to traverse (in order)
 
+import sys
+import re
 
-#Main Function
-    #File parsing and Error Handling
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+*** FUNCTION <name of function> ***
+*********************************************************************
+*** DESCRIPTION : <detailed english description of the function> ***
+*** INPUT ARGS : <list of all input argument names> ***
+*** OUTPUT ARGS : <list of all output argument names> ***
+*** IN/OUT ARGS : <list of all input/output argument names> ***
+*** RETURN : <return type and return value name> ***
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-class Node:
-    def __init__(self, symbol, value, rflag):
-        self.symbol = symbol[:4].upper()
+class TreeNode:
+    def __init__(self, symbol, value, rflag, iflag, mflag):
+        self.symbol = symbol
         self.value = value
         self.rflag = rflag
-        self.iflag = True
-        self.mflag = False
+        self.iflag = iflag
+        self.mflag = mflag
         self.left = None
         self.right = None
-    
-    def __repr__(self) -> str:
-        return f"{self.symbol}: {self.value} {self.rflag} {self.iflag} {self.mflag}"
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+*** FUNCTION <name of function> ***
+*********************************************************************
+*** DESCRIPTION : <detailed english description of the function> ***
+*** INPUT ARGS : <list of all input argument names> ***
+*** OUTPUT ARGS : <list of all output argument names> ***
+*** IN/OUT ARGS : <list of all input/output argument names> ***
+*** RETURN : <return type and return value name> ***
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 class BinarySearchTree:
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
     def __init__(self):
-        self.node = None
-    
-    def insert(self, symbol, value, rflag):
-        if self.node is None:
-            self.node = Node(symbol, value, rflag)
+        self.root = None
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    def insert(self, symbol, value, rflag, iflag, mflag):
+        new_node = TreeNode(symbol, value, rflag, iflag, mflag)
+        if self.root is None:
+            self.root = new_node
         else:
-            self.insert_recursivly(self.node, symbol,value, rflag)
-    
-    def insert_recursivly(self, cur_node ,symbol, value, rflag):
-        if symbol[:4].upper() < cur_node.symbol:
-            if cur_node.left is None:
-                cur_node.left = Node(symbol, value, rflag)
+            self._insert(self.root, new_node)
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    def _insert(self, root, new_node):
+        if new_node.symbol < root.symbol:
+            if root.left is None:
+                root.left = new_node
             else:
-                self.insert_recursivly(cur_node.left, symbol,value,rflag)
-        if symbol[:4].upper() > cur_node.symbol:
-            if cur_node.right is None:
-                cur_node.right = Node(symbol, value, rflag)
+                self._insert(root.left, new_node)
+        elif new_node.symbol > root.symbol:
+            if root.right is None:
+                root.right = new_node
             else:
-                self.insert_recursivly(cur_node.right, symbol, value, rflag)
+                self._insert(root.right, new_node)
         else:
-            cur_node.mflag = True
-    
+            # Duplicate symbol - update MFLAG
+            root.mflag = True
+            print(f"ERROR - symbol previously defined: {root.symbol} (+)")
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
     def search(self, symbol):
-        self.search_recursive(self.node,symbol)
-    
-    def search_recursive(self, curr_node, symbol):
-        if curr_node is None:
+        return self._search(self.root, symbol)
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    def _search(self, root, symbol):
+        if root is None:
             return None
-        
-        if symbol[:4] == curr_node.symbol:
-            return f'{symbol}'
-        
-        elif symbol[:4] < curr_node.symbol:
-            self.search_recursive(curr_node.left, symbol)
-        
+        if symbol == root.symbol:
+            return root
+        elif symbol < root.symbol:
+            return self._search(root.left, symbol)
         else:
-            self.search_recursive(curr_node.right, symbol)
+            return self._search(root.right, symbol)
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    def inorder_traversal(self, node, symbols=[]):
+        if node:
+            self.inorder_traversal(node.left, symbols)
+            symbols.append(node)
+            self.inorder_traversal(node.right, symbols)
+        return symbols
     
-    def inorder_traversal(self):
-        self.inorder_traversal_func(self.node)
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+*** FUNCTION <name of function> ***
+*********************************************************************
+*** DESCRIPTION : <detailed english description of the function> ***
+*** INPUT ARGS : <list of all input argument names> ***
+*** OUTPUT ARGS : <list of all output argument names> ***
+*** IN/OUT ARGS : <list of all input/output argument names> ***
+*** RETURN : <return type and return value name> ***
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+class SymbolTable:
     
-    def inorder_traversal_func(self,curr_node):
-        if curr_node:
-            self.inorder_traversal_func(curr_node.left)
-            print(f"{curr_node.symbol}: {curr_node.value} {curr_node.rflag} {curr_node.mflag} {curr_node.iflag}")
-            self.inorder_traversal_func(curr_node.right)
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    def __init__(self):
+        self.bst = BinarySearchTree()
     
-def main():
-    def process_sys_dat(bst, dat_file):
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    def validate_symbol_format(self, symbol):
+        # Check if symbol starts with a letter
+        if not symbol[0].isalpha():
+            return False, "ERROR - symbols start with a letter: " + symbol
+
+        # Check if the symbol is within the valid length (1 to 10 characters)
+        if len(symbol) > 10:
+            return False, "ERROR - symbols contain 10 characters maximum: " + symbol
+
+        # Check if symbol starts with a letter, max length 10 (excluding colon)
+        if not re.match(r"^[A-Za-z][A-Za-z0-9_]{0,10}$", symbol):
+            return False, "ERROR - symbols contain letters, digits and underscore: " + symbol
+        return True, None
+    
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    def validate_value(self, value, symbol):
+        # Check if value is a valid signed integer
         try:
-            with open(dat_file,'r') as file:
-                for line in file:
-                    parts = line.split()
-                    if len(parts) < 3:
-                        print('Invalid line format')
-                        continue
-                    
-                    symbol = parts[0].replace(':','')
-                    value = parts[1]
-                    rflag = parts[2].lower()
+            int_value = int(value)
+            return True, int_value, None
+        except ValueError:
+            return False, None, f"ERROR - symbol {symbol} invalid value: {value}"
+    
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-                    if not (symbol[0].isalpha()) or len(symbol) > 10 or not all(i.isalnum() or i == '_' for i in symbol):
-                        print(f'ERROR: Invalid symbol: {symbol}')
-                        continue
+    def validate_rflag(self, rflag, symbol):
+        # Check if RFLAG is a valid boolean (true/false)
+        rflag = rflag.lower()
+        if rflag in ["true", "false"]:
+            return True, 1 if rflag == "true" else 0, None
+        else:
+            return False, None, f"ERROR - symbol {symbol} invalid rflag: {rflag}"
+    
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-                    try:
-                        int(value)
-                    except ValueError:
-                        print(f'ERROR: Invalid value: {value}')
-                        continue
-                    
-                    if rflag not in ['true','false']:
-                        print(f'ERROR: Invalid rflag: {rflag}')
-                        continue
-
-                bst.insert(symbol, value, rflag)
-
-        except FileNotFoundError:
-            raise    
-
-
-    def process_search_file(bst, search_file):
-        try:
-            with open(search_file,'r') as file:
-                for line in file:
-                    symbol = line.strip()
-                    node = bst.search(symbol)
-                    if node:
-                        print(f'Symbol found: {node}')
-                    else:
-                        print('ERROR: Symbol not found')
+    def insert_symbol(self, symbol, value, rflag):
+        # Insert valid symbols into the symbol table
+        check, note = self.validate_symbol_format(symbol)
+        if not check:
+            print(note)
+            return
         
-        except FileNotFoundError:
-            raise
+        symbol_key = symbol[:4]  # Only the first 4 characters are significant
 
-    bst = BinarySearchTree()
+        is_valid_value, int_value, value_error = self.validate_value(value, symbol_key)
+        if not is_valid_value:
+            print(value_error)
+            return
+
+        is_valid_rflag, bool_rflag, rflag_error = self.validate_rflag(rflag, symbol_key)
+        if not is_valid_rflag:
+            print(rflag_error)
+            return
+
+        # Insert the symbol and its attributes into the symbol table
+        symbol_keyy = symbol[:4].upper()
+        iflag = True  # Set IFLAG to True for now
+        mflag = False # Set MFLAG initially to False
+        self.bst.insert(symbol_keyy, int_value, bool_rflag, iflag, mflag)
+    
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    def load_symbols(self, filename):
+        with open(filename, 'r') as file:
+            for line in file:
+                parts = line.split()
+                if len(parts) != 3:
+                    print(f"ERROR - invalid line format: {line.strip()}")
+                    continue
+                
+                symbol = parts[0].rstrip(":")
+                value = parts[1]
+                rflag = parts[2]
+                
+                self.insert_symbol(symbol, value, rflag)
+    
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    def search_symbol(self, symbol):
+        # symbol_key = symbol[:4].upper()
+        # node = self.bst.search(symbol_key)
+        # if node:
+        #     print(f"Symbol: {node.symbol}, Value: {node.value}, RFlag: {node.rflag}, IFlag: {node.iflag}, MFlag: {node.mflag}")
+        # else:
+        #     print(f"ERROR - symbol {symbol} not found")
+
+        # Validate the symbol format before searching
+        check, note = self.validate_symbol_format(symbol)
+        if not check:
+            print(note)
+            return
+        
+        # If valid, perform the search
+        symbol_key = symbol[:4].upper()  # Only the first 4 characters are significant
+        node = self.bst.search(symbol_key)
+        
+        if node:
+            print(f"FOUND - Symbol: {node.symbol}, Value: {node.value}, RFlag: {node.rflag}, IFlag: {node.iflag}, MFlag: {node.mflag}")
+        else:
+            print(f"ERROR - {symbol} not found in the symbol table")
+    
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    def display_symbols(self):
+        symbols = self.bst.inorder_traversal(self.bst.root)
+        print(f"\n{'Symbol':<10} {'Value':<10} {'RFlag':<6} {'IFlag':<6} {'MFlag':<6}\n")
+        for symbol in symbols:
+            print(f"{symbol.symbol:<10} {symbol.value:<10} {symbol.rflag:<6} {symbol.iflag:<6} {symbol.mflag:<6}")
+    
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    *** FUNCTION <name of function> ***
+    *********************************************************************
+    *** DESCRIPTION : <detailed english description of the function> ***
+    *** INPUT ARGS : <list of all input argument names> ***
+    *** OUTPUT ARGS : <list of all output argument names> ***
+    *** IN/OUT ARGS : <list of all input/output argument names> ***
+    *** RETURN : <return type and return value name> ***
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+
+def main():
+    symbol_table = SymbolTable()
+
+    # Step 1: Load symbols from SYMS.DAT
+    print()
+    symbol_table.load_symbols("SYMS.DAT")
+
+    # Step 2: Read search file and process symbols
+    if len(sys.argv) > 1:
+        search_file = sys.argv[1]
+    else:
+        search_file = input("\nEnter the search file name: ")
+        print()
 
     try:
-        process_sys_dat(bst, 'SYMS.DAT')
+        with open(search_file, 'r') as file:
+            for line in file:
+                symbol = line.strip()
+                if symbol:
+                    symbol_table.search_symbol(symbol)
     except FileNotFoundError:
-        print("ERROR: SYMS.DAT not found")
-        return
+        print(f"\nERROR - search file {search_file} not found\n")
     
-    search_file = input("What is the search file name? ")
-    
-    try:
-        process_search_file(bst, search_file)
-    except FileNotFoundError:
-        print(f"ERROR: {search_file} not found")
-        return
+    # Step 3: Display the symbol table
+    symbol_table.display_symbols()
 
-    print('Symbole Table in an in-order traversal')
-    bst.inorder_traversal()
-
-    
 if __name__ == "__main__":
     main()
