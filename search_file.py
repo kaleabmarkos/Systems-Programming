@@ -5,7 +5,17 @@
 *** DUE DATE : 09/18/2024
 *** INSTRUCTOR : HAMER 
 *********************************************************************
-*** DESCRIPTION : 
+*** DESCRIPTION : This project implements a symbol table for the SIC/XE 
+            assembler using a binary search tree (BST). It reads symbols 
+            from a file, validates them based on specific rules (symbols 
+            must start with a letter, be at most 10 characters long, and 
+            contain only letters, digits, or underscores), and inserts valid
+            symbols into the tree. Duplicate symbols are handled by setting
+            a "multiple definition flag" (MFLAG) to true and displaying an 
+            error message. Additionally, the program allows searching for 
+            symbols and displays an error if a symbol is invalid or not found. 
+            The symbol table can also be traversed in order to display all symbols 
+            and their attributes.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 
@@ -13,14 +23,31 @@ import sys
 import re
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-*** FUNCTION <name of function> ***
+*** CLASS : TreeNode
 *********************************************************************
-*** DESCRIPTION : <detailed english description of the function> ***
-*** INPUT ARGS : <list of all input argument names> ***
-*** OUTPUT ARGS : <list of all output argument names> ***
-*** IN/OUT ARGS : <list of all input/output argument names> ***
-*** RETURN : <return type and return value name> ***
+*** DESCRIPTION : The TreeNode class represents a node in a binary 
+*** search tree (BST). Each node stores a symbol and its associated 
+*** attributes (value, rflag, iflag, mflag), and has pointers to 
+*** its left and right children. The class is used to construct 
+*** the symbol table for the SIC/XE assembler, where each symbol 
+*** is represented as a node in the tree.
+*********************************************************************
+*** INPUT ARGS : symbol (string) - the symbol being inserted into 
+***              the tree (first 4 characters are significant)
+***              value (int) - the integer value associated with 
+***              the symbol
+***              rflag (bool) - the relocation flag (true or false)
+***              iflag (bool) - indicates if the symbol is defined 
+***              in the current control section (true for now)
+***              mflag (bool) - indicates if the symbol is 
+***              multiply defined (starts as false)
+*** OUTPUT ARGS : None
+*** IN/OUT ARGS : None
+*** RETURN : Returns an instance of the TreeNode class, which has 
+*** left and right child pointers, and stores the provided symbol 
+*** and its attributes (value, rflag, iflag, mflag).
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
 
 class TreeNode:
     def __init__(self, symbol, value, rflag, iflag, mflag):
@@ -33,36 +60,62 @@ class TreeNode:
         self.right = None
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-*** FUNCTION <name of function> ***
+*** CLASS : BinarySearchTree
 *********************************************************************
-*** DESCRIPTION : <detailed english description of the function> ***
-*** INPUT ARGS : <list of all input argument names> ***
-*** OUTPUT ARGS : <list of all output argument names> ***
-*** IN/OUT ARGS : <list of all input/output argument names> ***
-*** RETURN : <return type and return value name> ***
+*** DESCRIPTION : The BinarySearchTree class implements a binary 
+*** search tree (BST) to manage the symbol table for the SIC/XE assembler. 
+*** It allows the insertion of symbols, searching for symbols, and 
+*** traversing the tree in order. Each symbol is stored in a TreeNode 
+*** with its associated attributes (value, rflag, iflag, mflag), and the 
+*** class ensures that the tree maintains its binary search property, 
+*** where left children are smaller and right children are larger 
+*** than the parent node.
+*********************************************************************
+*** INPUT ARGS : None (the class methods will handle input as needed)
+*** OUTPUT ARGS : None
+*** IN/OUT ARGS : root (TreeNode) - represents the root node of 
+***               the binary search tree, updated with each insertion
+*** RETURN : Returns an instance of the BinarySearchTree class, which 
+*** contains methods for inserting nodes, searching for symbols, and 
+*** performing an inorder traversal of the tree.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
+
 class BinarySearchTree:
+
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: Constructor (__init__) ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This is the constructor for the BinarySearchTree class.
+    *** It initializes the binary search tree by setting the root node 
+    *** to None, representing an empty tree at the beginning.
+    *** INPUT ARGS : None
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : None
+    *** RETURN : None
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     def __init__(self):
         self.root = None
+
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: insert ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This function inserts a new symbol into the binary 
+    *** search tree. It creates a new TreeNode object with the given 
+    *** symbol and attributes (value, rflag, iflag, mflag) and inserts 
+    *** it in the appropriate location in the tree based on the 
+    *** binary search property.
+    *** INPUT ARGS : symbol (string) - the symbol to be inserted 
+    ***              value (int) - the integer value associated with the symbol
+    ***              rflag (bool) - relocation flag (true or false)
+    ***              iflag (bool) - flag indicating if the symbol is defined 
+    ***              in the current control section (true for now)
+    ***              mflag (bool) - flag indicating if the symbol has been 
+    ***              multiply defined (starts as false)
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : root (TreeNode) - the root node of the binary search tree
+    *** RETURN : None
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     def insert(self, symbol, value, rflag, iflag, mflag):
@@ -71,14 +124,21 @@ class BinarySearchTree:
             self.root = new_node
         else:
             self._insert(self.root, new_node)
+
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: _insert ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This is a helper function for the insert method. It 
+    *** recursively finds the correct position for the new node in the 
+    *** binary search tree by comparing the new symbol with the current 
+    *** root node. If the symbol already exists, it sets the MFLAG to true 
+    *** and prints an error message indicating that the symbol has been 
+    *** previously defined.
+    *** INPUT ARGS : root (TreeNode) - the current node in the binary search tree
+    ***              new_node (TreeNode) - the node to be inserted into the tree
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : None
+    *** RETURN : None
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     def _insert(self, root, new_node):
@@ -96,26 +156,36 @@ class BinarySearchTree:
             # Duplicate symbol - update MFLAG
             root.mflag = True
             print(f"ERROR - symbol previously defined: {root.symbol} (+)")
+    
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: search ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This function searches for a symbol in the binary search tree. 
+    *** It calls the helper method _search to locate the symbol in the tree. 
+    *** If the symbol is found, the corresponding TreeNode is returned; 
+    *** otherwise, None is returned.
+    *** INPUT ARGS : symbol (string) - the symbol to search for in the tree
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : None
+    *** RETURN : (TreeNode or None) - returns the node if the symbol is found,
+    *** otherwise returns None.
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     def search(self, symbol):
         return self._search(self.root, symbol)
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: _search ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This is a helper function for the search method. 
+    *** It recursively searches for a symbol in the binary search tree, 
+    *** comparing the symbol with the current root node and traversing 
+    *** the left or right subtree accordingly.
+    *** INPUT ARGS : root (TreeNode) - the current node in the binary search tree
+    ***              symbol (string) - the symbol to search for
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : None
+    *** RETURN : (TreeNode or None) - returns the node if the symbol is found,
+    *** otherwise returns None.
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     def _search(self, root, symbol):
@@ -127,14 +197,18 @@ class BinarySearchTree:
             return self._search(root.left, symbol)
         else:
             return self._search(root.right, symbol)
+        
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: inorder_traversal ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This function performs an inorder traversal of the binary 
+    *** search tree and appends each visited node to a list. The inorder 
+    *** traversal visits nodes in ascending order based on their symbol.
+    *** INPUT ARGS : node (TreeNode) - the current node to traverse
+    ***              symbols (list) - a list to store nodes during traversal
+    *** OUTPUT ARGS : symbols (list) - updated list of nodes visited in order
+    *** IN/OUT ARGS : symbols (list) - modified as nodes are visited
+    *** RETURN : (list) - returns the list of nodes visited during inorder traversal.
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     def inorder_traversal(self, node, symbols=[]):
@@ -146,37 +220,55 @@ class BinarySearchTree:
     
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-*** FUNCTION <name of function> ***
+*** CLASS: SymbolTable ***
 *********************************************************************
-*** DESCRIPTION : <detailed english description of the function> ***
-*** INPUT ARGS : <list of all input argument names> ***
-*** OUTPUT ARGS : <list of all output argument names> ***
-*** IN/OUT ARGS : <list of all input/output argument names> ***
-*** RETURN : <return type and return value name> ***
+*** DESCRIPTION : The SymbolTable class manages the symbol table using 
+*** a Binary Search Tree (BST) for efficient insertion, searching, and 
+*** traversal of symbols. The class handles the validation of symbols, 
+*** their values, and associated flags (rflag, iflag, mflag). It provides 
+*** methods to load symbols from a file, insert valid symbols into the BST, 
+*** search for symbols, and display the entire symbol table in a formatted 
+*** output.
+*** INPUT ARGS : None (class methods accept input arguments as needed)
+*** OUTPUT ARGS : None (class methods output data as needed)
+*** IN/OUT ARGS : bst (BinarySearchTree) - stores the root of the binary 
+*** search tree, which is updated with each symbol insertion.
+*** RETURN : Returns an instance of the SymbolTable class, which contains 
+*** methods for validating symbols, inserting them into the tree, 
+*** searching, and displaying symbols.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
 
 class SymbolTable:
     
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: Constructor (__init__) ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This is the constructor for the SymbolTable class. 
+    *** It initializes the class by creating an instance of the 
+    *** BinarySearchTree, which will be used to store and manage the symbols.
+    *** INPUT ARGS : None
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : None
+    *** RETURN : None
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
     def __init__(self):
         self.bst = BinarySearchTree()
     
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: validate_symbol_format ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This function validates the format of a given symbol. 
+    *** It checks if the symbol starts with a letter, is at most 10 characters 
+    *** long, and contains only valid characters (letters, digits, and underscores). 
+    *** If any of these conditions are not met, an appropriate error message 
+    *** is returned.
+    *** INPUT ARGS : symbol (string) - the symbol to validate
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : None
+    *** RETURN : (bool, string) - returns True and None if the symbol is valid, 
+    *** otherwise returns False and an error message.
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     def validate_symbol_format(self, symbol):
@@ -194,13 +286,17 @@ class SymbolTable:
         return True, None
     
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: validate_value ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This function validates the value of a symbol. It checks 
+    *** if the value is a valid signed integer. If the value is invalid, 
+    *** an error message is returned.
+    *** INPUT ARGS : value (string) - the value associated with the symbol
+    ***              symbol (string) - the symbol associated with the value
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : None
+    *** RETURN : (bool, int, string) - returns True and the integer value if valid, 
+    *** otherwise returns False and an error message.
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     def validate_value(self, value, symbol):
@@ -210,15 +306,20 @@ class SymbolTable:
             return True, int_value, None
         except ValueError:
             return False, None, f"ERROR - symbol {symbol} invalid value: {value}"
+
     
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: validate_rflag ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This function validates the rflag associated with a symbol. 
+    *** It checks if the rflag is either "true" or "false". If the rflag is invalid, 
+    *** an error message is returned.
+    *** INPUT ARGS : rflag (string) - the rflag value associated with the symbol
+    ***              symbol (string) - the symbol associated with the rflag
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : None
+    *** RETURN : (bool, int, string) - returns True and the boolean value (1 or 0) 
+    *** if valid, otherwise returns False and an error message.
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     def validate_rflag(self, rflag, symbol):
@@ -229,14 +330,19 @@ class SymbolTable:
         else:
             return False, None, f"ERROR - symbol {symbol} invalid rflag: {rflag}"
     
+    
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: insert_symbol ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This function inserts a valid symbol into the symbol table. 
+    *** It first validates the symbol, value, and rflag before inserting the symbol 
+    *** into the binary search tree with the associated attributes (value, rflag, iflag, mflag).
+    *** INPUT ARGS : symbol (string) - the symbol to insert
+    ***              value (string) - the value associated with the symbol
+    ***              rflag (string) - the rflag value associated with the symbol
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : None
+    *** RETURN : None
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     def insert_symbol(self, symbol, value, rflag):
@@ -264,15 +370,20 @@ class SymbolTable:
         mflag = False # Set MFLAG initially to False
         self.bst.insert(symbol_keyy, int_value, bool_rflag, iflag, mflag)
     
+    
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: load_symbols ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This function loads symbols from a given file. 
+    *** It reads each line of the file, splits the line into symbol, value, 
+    *** and rflag, and inserts each valid symbol into the symbol table.
+    *** INPUT ARGS : filename (string) - the name of the file to load symbols from
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : None
+    *** RETURN : None
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+
 
     def load_symbols(self, filename):
         with open(filename, 'r') as file:
@@ -289,23 +400,20 @@ class SymbolTable:
                 self.insert_symbol(symbol, value, rflag)
     
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: search_symbol ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This function searches for a symbol in the symbol table. 
+    *** It first validates the symbol format and then searches for the symbol 
+    *** in the binary search tree. If the symbol is found, its attributes are displayed. 
+    *** Otherwise, an error message is printed.
+    *** INPUT ARGS : symbol (string) - the symbol to search for
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : None
+    *** RETURN : None
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
     def search_symbol(self, symbol):
-        # symbol_key = symbol[:4].upper()
-        # node = self.bst.search(symbol_key)
-        # if node:
-        #     print(f"Symbol: {node.symbol}, Value: {node.value}, RFlag: {node.rflag}, IFlag: {node.iflag}, MFlag: {node.mflag}")
-        # else:
-        #     print(f"ERROR - symbol {symbol} not found")
-
+        
         # Validate the symbol format before searching
         check, note = self.validate_symbol_format(symbol)
         if not check:
@@ -322,14 +430,18 @@ class SymbolTable:
             print(f"ERROR - {symbol} not found in the symbol table")
     
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
+    *** FUNCTION: display_symbols ***
     *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
+    *** DESCRIPTION : This function displays all symbols in the symbol table 
+    *** in tabular format. It performs an inorder traversal of the binary 
+    *** search tree and prints the symbol, value, rflag, iflag, and mflag 
+    *** for each node in the tree.
+    *** INPUT ARGS : None
+    *** OUTPUT ARGS : None
+    *** IN/OUT ARGS : None
+    *** RETURN : None
     '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
 
     def display_symbols(self):
         symbols = self.bst.inorder_traversal(self.bst.root)
@@ -337,15 +449,25 @@ class SymbolTable:
         for symbol in symbols:
             print(f"{symbol.symbol:<10} {symbol.value:<10} {symbol.rflag:<6} {symbol.iflag:<6} {symbol.mflag:<6}")
     
-    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-    *** FUNCTION <name of function> ***
-    *********************************************************************
-    *** DESCRIPTION : <detailed english description of the function> ***
-    *** INPUT ARGS : <list of all input argument names> ***
-    *** OUTPUT ARGS : <list of all output argument names> ***
-    *** IN/OUT ARGS : <list of all input/output argument names> ***
-    *** RETURN : <return type and return value name> ***
-    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+*** FUNCTION: main ***
+*********************************************************************
+*** DESCRIPTION : The main function serves as the entry point for the 
+*** program. It creates an instance of the SymbolTable class, loads symbols 
+*** from the "SYMS.DAT" file, and searches for symbols based on the input 
+*** from a second file or user input. It also displays the contents of the 
+*** symbol table in a formatted table after processing all the symbols.
+*** INPUT ARGS : None (the function interacts with external files and 
+*** command-line arguments for input)
+*** OUTPUT ARGS : None (the function outputs search results and the symbol 
+*** table to the console)
+*** IN/OUT ARGS : symbol_table (SymbolTable) - instance of the SymbolTable 
+*** class that manages the symbol insertion, search, and display processes.
+*** RETURN : None (the function doesn't return any value, it handles 
+*** file processing and output display)
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
 
 
 def main():
