@@ -1,9 +1,5 @@
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 *** NAME : Kaleab Gessese
-*** CLASS : CSc 354
-*** ASSIGNMENT : 01
-*** DUE DATE : 09/18/2024
-*** INSTRUCTOR : HAMER 
 *********************************************************************
 *** DESCRIPTION : This project implements a symbol table for the SIC/XE 
             assembler using a binary search tree (BST). It reads symbols 
