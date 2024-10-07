@@ -45,8 +45,7 @@ class ExpressionVerifier:
             
         # Handle expressions starting with "=" to add to literal table
         if expression.startswith('='):
-            literal_value = self.process_literal(expression)
-            length = len(expression[3:])
+            literal_value, length = self.process_literal(expression)
             if literal_value:
                 self.literals.append(Literal(expression, literal_value, length, self.literal_address_counter))
             return None  # Skipping as this goes to literal table
@@ -71,22 +70,25 @@ class ExpressionVerifier:
         # Handle symbol lookup and value modification
         if '+' in expression:
             op1, op2 = expression.split('+')
-            if op2[1:].isdigit():
-                symbol, number = expression.split('+')
-                number = int(number.lstrip('#'))  # Remove the '#' before number
-                value, relocatable = self.lookup_symbol(symbol)
-                value += number  # Adding the number to the symbol's value
+            if op1[1:].isdigit():
+                op1 = int(op1.lstrip('#'))  # Remove the '#' before number
+                value, relocatable = self.lookup_symbol(op2)
+                value += op1  # Adding the number to the symbol's value
             else:
-                number, symbol = expression.split('+')
-                number = int(number.lstrip('#'))  # Remove the '#' before number
-                value, relocatable = self.lookup_symbol(symbol)
-                value += number  # Adding the number to the symbol's value
+                op2 = int(op2.lstrip('#'))  # Remove the '#' before number
+                value, relocatable = self.lookup_symbol(op1)
+                value += op2  # Adding the number to the symbol's value
 
         elif '-' in expression:
-            symbol, number = expression.split('-')
-            number = int(number.lstrip('#'))
-            value, relocatable = self.lookup_symbol(symbol)
-            value -= number        
+            op1, op2 = expression.split('-')
+            if op1[1:].isdigit():
+                op1 = int(op1.lstrip('#'))  # Remove the '#' before number
+                value, relocatable = self.lookup_symbol(op2)
+                value -= op1  # Adding the number to the symbol's value
+            else:
+                op2 = int(op2.lstrip('#'))  # Remove the '#' before number
+                value, relocatable = self.lookup_symbol(op1)
+                value -= op2  # Adding the number to the symbol's value
         else:
             value, relocatable = self.lookup_symbol(expression)
 
@@ -108,17 +110,19 @@ class ExpressionVerifier:
         # Check if the literal already exists
         for lit in self.literals:
             if lit.name == literal:
-                return None  # If found, return the existing literal value
-
+                return None,0  # If found, return the existing literal value
+        length=0
         # If the first character is 'C', treat the following characters as ASCII
         if literal.startswith('=0C'):
             ascii_part = literal[3:]  # Skip the 'C'
             ascii_value = ''.join(str(hex(ord(char))[2:]) for char in ascii_part)  # Convert each character to its ASCII code
             literal_value = ascii_value
+            length = len(literal[3:])
         elif literal.startswith('=0X'):
             hex_part = literal[3:]  # Skip the 'X'
             try:
                 literal_value = hex_part  # Convert hexadecimal to decimal
+                length = 1
             except ValueError:
                 raise ValueError(f"Invalid hexadecimal literal: {literal}")
         else:
@@ -126,7 +130,7 @@ class ExpressionVerifier:
 
         # Add the new literal to the table with the '=' included in the name
         self.literal_address_counter += 1
-        return literal_value
+        return literal_value, length
 
 
 
