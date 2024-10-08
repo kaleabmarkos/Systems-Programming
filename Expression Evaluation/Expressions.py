@@ -34,9 +34,17 @@ class ExpressionVerifier:
 
         # Check for special cases like @, #, and ,
         if expression.startswith('@'):
+            if 'X' in expression or 'x' in expression:
+                new_expression = Expression(f"{original_expression}->(ER)", '-', '-', '*', '-', '* \t<- This is an error b/c X and N can\'t be 1')
+                self.expressions.append(new_expression)
+                return
             expression = expression[1:]  # Remove '@'
             n_bit = True  # Set n-bit
         elif expression.startswith('#'):
+            if 'X' in expression or 'x' in expression:
+                new_expression = Expression(f"{original_expression}->(ER)", '-', '-', '-', '*', '* \t<- This is an error b/c X and I can\'t be 1')
+                self.expressions.append(new_expression)
+                return
             expression = expression[1:]  # Remove '#'
             i_bit = True  # Set i-bit
         else:
@@ -74,10 +82,24 @@ class ExpressionVerifier:
                 op1 = int(op1.lstrip('#'))  # Remove the '#' before number
                 value, relocatable = self.lookup_symbol(op2)
                 value += op1  # Adding the number to the symbol's value
-            else:
+            elif op2[1:].isdigit():
                 op2 = int(op2.lstrip('#'))  # Remove the '#' before number
                 value, relocatable = self.lookup_symbol(op1)
                 value += op2  # Adding the number to the symbol's value
+            else:
+                val_of_op1, relocatable_of_op1 = self.lookup_symbol(op1)
+                val_of_op2, relocatable_of_op2 = self.lookup_symbol(op2)
+                if val_of_op1 and val_of_op2:
+                    if (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "RELATIVE"):
+                        relocatable = "RELATIVE"
+                    elif (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "ABSOLUTE"):
+                        relocatable = "ABSOLUTE"
+                    elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "ABSOLUTE"):
+                        relocatable = "RELATIVE"
+                    elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "RELATIVE"):
+                        relocatable = "RR"
+                    
+                    value = val_of_op1+val_of_op2
 
         elif '-' in expression:
             op1, op2 = expression.split('-')
@@ -85,16 +107,41 @@ class ExpressionVerifier:
                 op1 = int(op1.lstrip('#'))  # Remove the '#' before number
                 value, relocatable = self.lookup_symbol(op2)
                 value -= op1  # Adding the number to the symbol's value
-            else:
+            elif op2[1:].isdigit():
                 op2 = int(op2.lstrip('#'))  # Remove the '#' before number
                 value, relocatable = self.lookup_symbol(op1)
                 value -= op2  # Adding the number to the symbol's value
+            else:
+                val_of_op1, relocatable_of_op1 = self.lookup_symbol(op1)
+                val_of_op2, relocatable_of_op2 = self.lookup_symbol(op2)
+                if val_of_op1 and val_of_op2:
+                    if (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "RELATIVE"):
+                        relocatable = "AR"
+                    elif (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "ABSOLUTE"):
+                        relocatable = "ABSOLUTE"
+                    elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "ABSOLUTE"):
+                        relocatable = "RELATIVE"
+                    elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "RELATIVE"):
+                        relocatable = "ABSOLUTE"
+                    
+                    value = val_of_op1+val_of_op2
         else:
             value, relocatable = self.lookup_symbol(expression)
 
-        # Add valid expression to the list
-        new_expression = Expression(original_expression, value, relocatable, n_bit, i_bit, x_bit)
-        self.expressions.append(new_expression)
+        if value and relocatable != "AR" and relocatable != "RR":
+            # Add valid expression to the list
+            new_expression = Expression(original_expression, value, relocatable, n_bit, i_bit, x_bit)
+            self.expressions.append(new_expression)
+        elif not value:
+            new_expression = Expression(f"{original_expression}->(N/A)", '-', '-', '-', '-', '- \t<- This is not applicable b/c the symbol is not in the symbol table')
+            self.expressions.append(new_expression)
+        elif relocatable == "AR":
+            new_expression = Expression(f"{original_expression}->(ER)", '-', '-', '-', '-', '- \t<- This is an error b/c the RFLAGs are False and True with the \'-\' operator')
+            self.expressions.append(new_expression)
+        elif relocatable == "RR":
+            new_expression = Expression(f"{original_expression}->(ER)", '-', '-', '-', '-', '- \t<- This is an error b/c the RFLAGs are True and True with the \'+\' operator')
+            self.expressions.append(new_expression)
+        
 
     def lookup_symbol(self, symbol):
         # Use the symbol table to look up the symbol in the BST
@@ -102,7 +149,7 @@ class ExpressionVerifier:
         if node:
             return node.value, "RELATIVE" if node.rflag else "ABSOLUTE"
         else:
-            raise ValueError(f"Symbol {symbol} not found in the Symbol Table")
+            return None, f"Symbol {symbol} not found in the Symbol Table"
 
     def process_literal(self, literal):
         # Keep the full literal name, including the '='
@@ -140,8 +187,12 @@ class ExpressionVerifier:
         print("----------------------------------------------------------------------")
         print(f"{'EXPRESSION':<15} {'VALUE':<10} {'RELOCATABLE':<15} {'N-Bit':<10} {'I-Bit':<10} {'X-Bit':<10}")
         for exp in self.expressions:
-            print(f"{exp.expression:<15} {exp.ex_value:<10} {exp.relocatable:<15} "
-                  f"{int(exp.n_bit):<10} {int(exp.i_bit):<10} {int(exp.x_bit):<10}")
+            if isinstance(exp.n_bit, str) and exp.n_bit.isdigit() and isinstance(exp.i_bit, str) and exp.i_bit.isdigit() and isinstance(exp.x_bit, str) and exp.x_bit.isdigit():
+                print(f"{exp.expression:<15} {exp.ex_value:<10} {exp.relocatable:<15} "
+                    f"{int(exp.n_bit):<10} {int(exp.i_bit):<10} {int(exp.x_bit):<10}")
+            else:
+                print(f"{exp.expression:<15} {exp.ex_value:<10} {exp.relocatable:<15} "
+                    f"{exp.n_bit:<10} {exp.i_bit:<10} {exp.x_bit:<10}")
 
     def display_literals(self):
         print()
