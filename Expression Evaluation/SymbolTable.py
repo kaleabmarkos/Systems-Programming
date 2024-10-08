@@ -1,6 +1,5 @@
 from BST import BinarySearchTree
 import re
-from BST import BinarySearchTree  # Assuming BST is implemented in this module
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 *** CLASS: SymbolTable ***

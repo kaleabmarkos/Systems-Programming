@@ -167,7 +167,7 @@ class ExpressionVerifier:
         # Handle symbol lookup and value modification
         if '+' in expression:
             op1, op2 = map(str.strip, expression.split('+'))
-            if op1[0].isdigit() or op2.isdigit():
+            if op1[0].isdigit() or op2[0].isdigit():
                 new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c a symbol does not start with a number')
                 self.expressions.append(new_expression)
                 return
@@ -182,22 +182,27 @@ class ExpressionVerifier:
             else:
                 val_of_op1, relocatable_of_op1 = self.lookup_symbol(op1)
                 val_of_op2, relocatable_of_op2 = self.lookup_symbol(op2)
-                if val_of_op1 and val_of_op2:
-                    if (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "RELATIVE"):
-                        relocatable = "RELATIVE"
-                    elif (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "ABSOLUTE"):
-                        relocatable = "ABSOLUTE"
-                    elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "ABSOLUTE"):
-                        relocatable = "RELATIVE"
-                    elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "RELATIVE"):
-                        relocatable = "RR"
-                    
-                    value = val_of_op1+val_of_op2
+                if not val_of_op1 or not val_of_op2:
+                    new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c one of the symbols is not in the symbol table')
+                    self.expressions.append(new_expression)
+                    return
+                  
+                if (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "RELATIVE"):
+                    relocatable = "RELATIVE"
+                elif (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "ABSOLUTE"):
+                    relocatable = "ABSOLUTE"
+                elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "ABSOLUTE"):
+                    relocatable = "RELATIVE"
+                elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "RELATIVE"):
+                    relocatable = "RR"
+                
+                value = val_of_op1+val_of_op2
+                
 
         elif '-' in expression:
             op1, op2 = map(str.strip, expression.split('-'))
-            if op1[0].isdigit() or op2.isdigit():
-                new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c a symbol does not start with a number')
+            if op1[0].isdigit() or op2[0].isdigit():
+                new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is error b/c a symbol does not start with a number')
                 self.expressions.append(new_expression)
                 return
             if op1[1:].isdigit():
@@ -211,21 +216,25 @@ class ExpressionVerifier:
             else:
                 val_of_op1, relocatable_of_op1 = self.lookup_symbol(op1)
                 val_of_op2, relocatable_of_op2 = self.lookup_symbol(op2)
-                if val_of_op1 and val_of_op2:
-                    if (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "RELATIVE"):
-                        relocatable = "AR"
-                    elif (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "ABSOLUTE"):
-                        relocatable = "ABSOLUTE"
-                    elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "ABSOLUTE"):
-                        relocatable = "RELATIVE"
-                    elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "RELATIVE"):
-                        relocatable = "ABSOLUTE"
-                    
-                    value = val_of_op1-val_of_op2
+                if not val_of_op1 or not val_of_op2:
+                    new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c one of the symbols is not in the symbol table')
+                    self.expressions.append(new_expression)
+                    return
+            
+                if (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "RELATIVE"):
+                    relocatable = "AR"
+                elif (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "ABSOLUTE"):
+                    relocatable = "ABSOLUTE"
+                elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "ABSOLUTE"):
+                    relocatable = "RELATIVE"
+                elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "RELATIVE"):
+                    relocatable = "ABSOLUTE"
+                
+                value = val_of_op1-val_of_op2
         else:
             value, relocatable = self.lookup_symbol(expression)
 
-        if value and relocatable != "AR" and relocatable != "RR":
+        if value is not None and (relocatable != "AR") and (relocatable != "RR"):
             # Add valid expression to the list
             new_expression = Expression(original_expression, value, relocatable, n_bit, i_bit, x_bit)
             self.expressions.append(new_expression)
