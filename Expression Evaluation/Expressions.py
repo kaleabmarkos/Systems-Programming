@@ -101,6 +101,11 @@ class ExpressionVerifier:
         value = None
         original_expression = expression.strip()
 
+        if expression[0].isdigit():
+            new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c a symbol does not start with a number')
+            self.expressions.append(new_expression)
+            return
+
         # Check for special cases like @, #, and ,
         if expression.startswith('@'):
             if 'X' in expression or 'x' in expression:
@@ -117,6 +122,16 @@ class ExpressionVerifier:
                 n_bit = True  # Set n-bit
         
         elif expression.startswith('#'):
+            if expression[1:].isdigit():
+                # Check if the expression is purely numeric (like 22)
+                calc_expression = expression[1:]
+                # Treat as an immediate value
+                value = int(calc_expression)
+                i_bit = True  # Set the immediate addressing bit to true
+                # Add the expression to the table (e.g., it would show as "#22")
+                new_expression = Expression(f"{expression}", value, relocatable, n_bit, i_bit, x_bit)
+                self.expressions.append(new_expression)
+                return  # Skip further processing since it's a valid numeric expression
             if 'X' in expression or 'x' in expression:
                 if len(expression) > 1 and expression[1].isdigit():
                     n_bit = i_bit = True
@@ -141,16 +156,6 @@ class ExpressionVerifier:
             elif literal_value and literal_value != '-':
                 self.literals.append(Literal(expression, literal_value, length, self.literal_address_counter))
             return None  # Skipping as this goes to literal table
-        
-        # Check if the expression is purely numeric (like 22)
-        if expression.isdigit():
-            # Treat as an immediate value
-            value = int(expression)
-            i_bit = True  # Set the immediate addressing bit to true
-            # Add the expression to the table (e.g., it would show as "#22")
-            new_expression = Expression(f"#{expression}", value, relocatable, n_bit, i_bit, x_bit)
-            self.expressions.append(new_expression)
-            return  # Skip further processing since it's a valid numeric expression
                 
 
         # Handling comma-based indexing
@@ -162,6 +167,10 @@ class ExpressionVerifier:
         # Handle symbol lookup and value modification
         if '+' in expression:
             op1, op2 = map(str.strip, expression.split('+'))
+            if op1[0].isdigit() or op2.isdigit():
+                new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c a symbol does not start with a number')
+                self.expressions.append(new_expression)
+                return
             if op1[1:].isdigit():
                 op1 = int(op1.lstrip('#'))  # Remove the '#' before number
                 value, relocatable = self.lookup_symbol(op2)
@@ -187,6 +196,10 @@ class ExpressionVerifier:
 
         elif '-' in expression:
             op1, op2 = map(str.strip, expression.split('-'))
+            if op1[0].isdigit() or op2.isdigit():
+                new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c a symbol does not start with a number')
+                self.expressions.append(new_expression)
+                return
             if op1[1:].isdigit():
                 op1 = int(op1.lstrip('#'))  # Remove the '#' before number
                 value, relocatable = self.lookup_symbol(op2)
