@@ -104,7 +104,7 @@ class SymbolTable:
     def validate_rflag(self, rflag, symbol):
         # Check if RFLAG is a valid boolean (true/false)
         rflag = rflag.lower()
-        if rflag in ["true", "false"]:
+        if rflag in ["true", "false", "t", "f"]:
             return True, 1 if rflag == "true" else 0, None
         else:
             return False, None, f"ERROR - symbol {symbol} invalid rflag: {rflag}"
@@ -128,22 +128,19 @@ class SymbolTable:
         # Insert valid symbols into the symbol table
         check, note = self.validate_symbol_format(symbol)
         if not check:
-            print(note)
             return
-        
+        symbol_key = symbol[:4]
 
-        is_valid_value, int_value, value_error = self.validate_value(value, symbol)
+        is_valid_value, int_value, value_error = self.validate_value(value, symbol_key)
         if not is_valid_value:
-            print(value_error)
             return
 
-        is_valid_rflag, bool_rflag, rflag_error = self.validate_rflag(rflag, symbol)
+        is_valid_rflag, bool_rflag, rflag_error = self.validate_rflag(rflag, symbol_key)
         if not is_valid_rflag:
-            print(rflag_error)
             return
 
         # Insert the symbol and its attributes into the symbol table
-        symbol_keyy = symbol.upper()
+        symbol_keyy = symbol[:4].upper()
         iflag = True  # Set IFLAG to True for now
         mflag = False # Set MFLAG initially to False
         self.bst.insert(symbol_keyy, int_value, bool_rflag, iflag, mflag)
@@ -195,5 +192,5 @@ class SymbolTable:
             return None
 
         # Perform the search in the BST
-        symbol_key = symbol.upper()  # Convert symbol to uppercase for uniformity
+        symbol_key = symbol[:4].upper()  # Convert symbol to uppercase for uniformity
         return self.bst.search(symbol_key)

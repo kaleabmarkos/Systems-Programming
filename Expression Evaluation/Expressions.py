@@ -98,13 +98,9 @@ class ExpressionVerifier:
     def verify_expression(self, expression):
         n_bit = i_bit = x_bit = False
         relocatable = "ABSOLUTE"
-        value = None
+        value = 0
         original_expression = expression.strip()
 
-        if expression[0].isdigit():
-            new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c a symbol does not start with a number')
-            self.expressions.append(new_expression)
-            return
 
         # Check for special cases like @, #, and ,
         if expression.startswith('@'):
@@ -117,6 +113,7 @@ class ExpressionVerifier:
                     return
             if len(expression) > 1 and expression[1].isdigit():
                 n_bit = i_bit = True
+                expression = expression[1:]  # Remove '@'
             else:        
                 expression = expression[1:]  # Remove '@'
                 n_bit = True  # Set n-bit
@@ -157,6 +154,14 @@ class ExpressionVerifier:
                 self.literals.append(Literal(expression, literal_value, length, self.literal_address_counter))
             return None  # Skipping as this goes to literal table
                 
+        if expression.isdigit():
+            # Treat as an immediate value
+            value = int(expression)
+            i_bit = True  # Set the immediate addressing bit to true
+            # Add the expression to the table (e.g., it would show as "#22")
+            new_expression = Expression(f"#{expression}", value, relocatable, n_bit, i_bit, x_bit)
+            self.expressions.append(new_expression)
+            return  # Skip further processing since it's a valid numeric expression
 
         # Handling comma-based indexing
         if ',' in expression:
@@ -167,26 +172,41 @@ class ExpressionVerifier:
         # Handle symbol lookup and value modification
         if '+' in expression:
             op1, op2 = map(str.strip, expression.split('+'))
-            if op1[0].isdigit() or op2[0].isdigit():
-                new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c a symbol does not start with a number')
-                self.expressions.append(new_expression)
-                return
-            if op1[1:].isdigit():
-                op1 = int(op1.lstrip('#'))  # Remove the '#' before number
-                value, relocatable = self.lookup_symbol(op2)
-                value += op1  # Adding the number to the symbol's value
-            elif op2[1:].isdigit():
-                op2 = int(op2.lstrip('#'))  # Remove the '#' before number
-                value, relocatable = self.lookup_symbol(op1)
-                value += op2  # Adding the number to the symbol's value
-            else:
-                val_of_op1, relocatable_of_op1 = self.lookup_symbol(op1)
-                val_of_op2, relocatable_of_op2 = self.lookup_symbol(op2)
-                if not val_of_op1 or not val_of_op2:
+            relocatable_of_op1=relocatable_of_op2=None
+            
+            if op1.isdigit():
+                value=int(op1)
+                relocatable_of_op1 = "ABSOLUTE"
+            elif op1[0].isalpha():
+                op1_value, relocatable_of_op1 = self.lookup_symbol(op1)
+                
+                if not op1_value:
                     new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c one of the symbols is not in the symbol table')
                     self.expressions.append(new_expression)
                     return
-                  
+                value += op1_value  # Adding the number to the symbol's value
+            elif op1[1:].isdigit():
+                op1 = int(op1.lstrip('#'))  # Remove the '#' before number
+                relocatable_of_op1 = "ABSOLUTE"
+                value = op1  # Adding the number to the symbol's value
+            if op2.isdigit():
+                value+=int(op2)
+                relocatable_of_op2 = "ABSOLUTE"
+            elif op2[0].isalpha():
+                op2_value, relocatable_of_op2 = self.lookup_symbol(op2)
+                if not op2_value:
+                    new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c one of the symbols is not in the symbol table')
+                    self.expressions.append(new_expression)
+                    return
+                value += op2_value  # Adding the number to the symbol's value
+            elif op2[1:].isdigit():
+                op2 = int(op2.lstrip('#'))  # Remove the '#' before number
+                relocatable_of_op2 = "ABSOLUTE"
+                value += op2  # Adding the number to the symbol's value
+            
+            if relocatable_of_op1 and relocatable_of_op2:
+            
+                # Handle addition relocatability
                 if (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "RELATIVE"):
                     relocatable = "RELATIVE"
                 elif (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "ABSOLUTE"):
@@ -195,46 +215,62 @@ class ExpressionVerifier:
                     relocatable = "RELATIVE"
                 elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "RELATIVE"):
                     relocatable = "RR"
-                
-                value = val_of_op1+val_of_op2
+    
                 
 
         elif '-' in expression:
             op1, op2 = map(str.strip, expression.split('-'))
-            if op1[0].isdigit() or op2[0].isdigit():
-                new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is error b/c a symbol does not start with a number')
-                self.expressions.append(new_expression)
-                return
-            if op1[1:].isdigit():
-                op1 = int(op1.lstrip('#'))  # Remove the '#' before number
-                value, relocatable = self.lookup_symbol(op2)
-                value = op1 - value  # Subtracting the number from the symbol's value
-            elif op2[1:].isdigit():
-                op2 = int(op2.lstrip('#'))  # Remove the '#' before number
-                value, relocatable = self.lookup_symbol(op1)
-                value -= op2  # Subtracting the number form the symbol's value
-            else:
-                val_of_op1, relocatable_of_op1 = self.lookup_symbol(op1)
-                val_of_op2, relocatable_of_op2 = self.lookup_symbol(op2)
-                if not val_of_op1 or not val_of_op2:
+            relocatable_of_op1=relocatable_of_op2=None
+
+            if op1.isdigit():
+                value=int(op1)
+                relocatable_of_op1 = "ABSOLUTE"
+            elif op1[0].isalpha():
+                op1_value, relocatable_of_op1 = self.lookup_symbol(op1) 
+                if not op1_value:
                     new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c one of the symbols is not in the symbol table')
                     self.expressions.append(new_expression)
                     return
-            
+                value =op1_value  # Adding the number to the symbol's value
+                
+            elif op1[1:].isdigit():
+                op1 = int(op1.lstrip('#'))  # Remove the '#' before number
+                relocatable_of_op1 = "ABSOLUTE"
+                value = op1  # Adding the number to the symbol's value
+            if op2.isdigit():
+                value=value-int(op2)
+                relocatable_of_op2 = "ABSOLUTE"
+            elif op2[0].isalpha():
+                op2_value, relocatable_of_op2 = self.lookup_symbol(op2)
+                if not op2_value:
+                    new_expression = Expression(f"{original_expression}", '-', '-', '-', '-', f'- \t<- This is not applicable b/c one of the symbols is not in the symbol table')
+                    self.expressions.append(new_expression)
+                    return
+                value =value - op2_value  # Adding the number to the symbol's value
+            elif op2[1:].isdigit():
+                op2 = int(op2.lstrip('#'))  # Remove the '#' before number
+                relocatable_of_op2 = "ABSOLUTE"
+                value =value - op2  # Adding the number to the symbol's value
+
+            if relocatable_of_op1 and relocatable_of_op2:
+        
+                # Handle subtraction relocatability
                 if (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "RELATIVE"):
-                    relocatable = "AR"
-                elif (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "ABSOLUTE"):
+                    new_expression = Expression(f"{original_expression}->(ER)", '-', '-', '-', '-', '- \t<- Error: ABSOLUTE - RELATIVE is not allowed')
+                    self.expressions.append(new_expression)
+                    return
+                elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "RELATIVE"):
                     relocatable = "ABSOLUTE"
                 elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "ABSOLUTE"):
                     relocatable = "RELATIVE"
-                elif (relocatable_of_op1 == "RELATIVE" and relocatable_of_op2 == "RELATIVE"):
+                elif (relocatable_of_op1 == "ABSOLUTE" and relocatable_of_op2 == "ABSOLUTE"):
                     relocatable = "ABSOLUTE"
-                
-                value = val_of_op1-val_of_op2
+
+        
         else:
             value, relocatable = self.lookup_symbol(expression)
 
-        if value is not None and (relocatable != "AR") and (relocatable != "RR"):
+        if value and (relocatable != "AR" and relocatable != "RR"):
             # Add valid expression to the list
             new_expression = Expression(original_expression, value, relocatable, n_bit, i_bit, x_bit)
             self.expressions.append(new_expression)
@@ -291,14 +327,14 @@ class ExpressionVerifier:
                 return None,0  # If found, return the existing literal value
         length=0
         # If the first character is 'C', treat the following characters as ASCII
-        if literal.startswith('=0C'):
+        if literal.startswith('=0C') or literal.startswith('=0c'):
             ascii_part = literal[3:]  # Skip the 'C'
             ascii_value = ''.join(str(hex(ord(char))[2:]) for char in ascii_part)  # Convert each character to its ASCII code
             literal_value = ascii_value
             length = len(literal[3:])
             self.literal_address_counter += 1
             
-        elif literal.startswith('=0X'):
+        elif literal.startswith('=0X') or literal.startswith('=0x'):
             hex_part = literal[3:]  # Skip the 'X'
             literal_value = hex_part  # Take the hexpart
             length = 1
