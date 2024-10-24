@@ -1,0 +1,18 @@
+
+Program Length is 00010 bytes
+
+Output Listing:
+LINE #    LOCCTR     Symbol     Opcode     Operand
+---------------------------------------------------
+1         00000      PROG:      START      #0
+2         00000      ONE:       FIX        
+3         00001                 COMPR      S,T
+4         00003                 +LDL       #10
+5         00007                 STB        TWO,X
+6         0000A                 SVC        #5
+7         0000D      TWO:       NORM       
+8         00010                 END        ONE
+Sym Table
+PROG      00000  true
+ONE       00000  true
+TWO       0000D  true
