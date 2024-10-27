@@ -9,9 +9,17 @@ class OpcodeClass:
     def __init__(self):
         self.opcode_table = []  # List to store opcode details
 
-    def get_opcode_contents(self):
-        """Return the list of opcodes."""
-        return [(opcode.label, opcode.format) for opcode in self.opcode_table]
+    def load_opcodes_from_file(self):
+        """Load opcode details from 'opcode.dat' file."""
+        filename = 'opcode.dat'  # Hardcoded filename
+        try:
+            with open(filename, 'r') as file:
+                opcode_lines = file.readlines()
+                self.add_opcode(opcode_lines)  # Add opcodes from the file
+        except FileNotFoundError:
+            print(f"Error: The file '{filename}' was not found.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
     def break_opcode_details(self, line):
         """Parse a line and create an OpcodeDetails object."""
@@ -38,25 +46,9 @@ class OpcodeClass:
             opcode_obj = self.break_opcode_details(line)
             self.opcode_table.append(opcode_obj)
 
-    def load_opcodes_from_file(self):
-        """Load opcode details from a file."""
-        filename='./OPCODE.DAT'
-        try:
-            with open(filename, 'r') as file:
-                opcode_lines = file.readlines()
-                self.add_opcode(opcode_lines)  # Add opcodes from the file
-                
-        except FileNotFoundError:
-            print(f"Error: The file '{filename}' was not found.")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-    
-    def print_them(self):
-        return [(opcode.label, opcode.format) for opcode in self.opcode_table]
-
-if __name__ == "__main__":
-    opcode_class = OpcodeClass()
-    
-    # Load opcodes from 'opcode.dat' automatically
-    opcode_class.load_opcodes_from_file()
-    print(opcode_class.print_them())
+    def get_opcode_format(self, opcode):
+        """Get the format of the given opcode."""
+        for entry in self.opcode_table:
+            if entry.label == opcode:
+                return int(entry.format, 16)  # Ensure it handles hexadecimal
+        return 0  # Default if not found

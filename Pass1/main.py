@@ -6,6 +6,7 @@ class Assembler:
         self.symbol_table = {}
         self.location_counter = 0
         self.output_lines = []
+        self.literal = []
 
     def load_opcodes(self):
         """Load opcodes from the file."""
@@ -29,47 +30,99 @@ class Assembler:
         if not parts:
             return
 
+        # Initialize label
         label = ''
+
         # Handle label
         if parts[0].endswith(':'):
-            label = parts[0]  # Remove the colon
+            label = parts[0][:-1]  # Remove the colon
             self.symbol_table[label] = self.location_counter
             parts = parts[1:]  # Remove the label from parts
 
-        # Handle opcode
+        # Handle opcode and operand
         if parts:
             opcode = parts[0]
-            operand = ' '.join(parts[1:]) if len(parts) > 1 else ''
-            format = self.opcode_class.get_opcode_contents()
-            format_=0
-            if opcode.startswith('+'):
-                format_ = 4
-            else:
-                for form in format:
-                    if form[0]==opcode:
-                        format_ = int(form[1]) 
-            self.output_lines.append(f"{self.location_counter:05X}\t{label}\t{opcode}\t{operand}")  # Store the current line
-            self.location_counter += format_  # Increment LC by the format of the opcode
+            operand = ' '.join(parts[1:]) if len(parts) > 1 else ''            
+            
+            # Process directives
+            if opcode == 'START':
+                if operand.startswith('#'):
+                    self.location_counter = int(operand[1:], 16)  # Set the location counter
+                else:
+                    self.location_counter = int(operand, 16)  # Set the location counter
+                
+            elif opcode == 'END':
+                # Handle literals after END
+                for literal in self.literal:
+                    lit_value = literal[0][3:]  # Get the actual value
+                    length = len(lit_value) // 2  # Length in bytes
+                    self.output_lines.append(f"{self.location_counter:05X}\t{literal[0]}\t{length}\t{lit_value}")
+                    self.location_counter += length  # Increment LC by the length of the literal
+                return  # Skip further processing for END
+                
+            elif opcode == 'WORD':
+                self.location_counter += (len(hex(int(operand))) - 2) // 2  # Add length in hex
+                
+            elif opcode == 'BYTE':
+                if operand.startswith('=0X') or operand.startswith('=0x'):
+                    length = (len(operand) - 3) // 2  # X'DCBA' => DCBA length / 2
+                    value = operand[3:]
+                    self.location_counter += length
+                    temp_list = [operand, length, value]
+                elif operand.startswith('=0C') or operand.startswith('=0x'):
+                    starting_value = operand[3:]
+                    value=''
+                    for i in starting_value:
+                        temp_val = str(ord(i)-24)
+                        value+=temp_val
+                    length = len(operand) - 3  # C'DCBA' => DCBA length
+                    self.location_counter += length
+                    temp_list = [operand, length, value]
+                self.literal.append(temp_list)
+            elif opcode == 'RESB':
+                self.location_counter += int(operand)  # Add the specified number
+                
+            elif opcode == 'RESW':
+                self.location_counter += int(operand) * 3  # Add 3 times the specified number
+                
+            elif opcode == 'BASE':
+                ...
+                  # No action required
+            elif opcode in ['EXTDEF', 'EXTREF']:
+                  # Skip these directives
+                ...
+            elif opcode == 'EQU':
+                ...
 
+            format_ = self.opcode_class.get_opcode_format(opcode)
+            # Append the output line with the current line data
+            self.output_lines.append(f"{self.location_counter:05X}\t{label if label else '':<10}\t{opcode}\t{operand}")
+            self.location_counter += format_  # Increment LC by the format of the opcode
 
     def generate_output_file(self, output_filename):
         """Generate the output file."""
         with open(output_filename, 'w') as file:
-            
-            counter=1
-            file.write(f"\nProgram Length is {self.location_counter:05X} bytes\n\n")
-            file.write("Output Listing:\n")
-            file.write(f"{'LINE #':<10}{'LOCCTR':<10} {'Symbol':<10} {'Opcode':<10} {'Operand'}\n")  # Header
-            file.write("---------------------------------------------------\n")
-            for line in self.output_lines:
-                # Ensure the formatting matches the desired output, with correct spacing
-                locctr, sym, opcode, operand = line.split('\t')
-                file.write(f"{counter:<10}{locctr:<10} {sym:<10} {opcode:<10} {operand}\n")
-                counter+=1
             file.write("Sym Table\n")
             for symbol, address in self.symbol_table.items():
-                file.write(f"{symbol[:-1]:<10}{address:05X}  true\n")  # Print symbol and its address with alignment
+                file.write(f"{symbol:<10}{address:05X}  true\n")  # Print symbol and its address with alignment
 
+            file.write(f"\nProgram Length is {self.location_counter:05X} bytes\n\n")
+            file.write("Output Listing:\n")
+            file.write(f"{'LOCCTR':<10} {'Symbol':<10} {'Opcode':<10} {'Operand'}\n")  # Header
+            file.write('-' * 50 + '\n')  # Separator
+            for line in self.output_lines:
+                locctr, sym, opcode, operand = line.split('\t')
+                file.write(f"{locctr:<10} {sym:<10} {opcode:<10} {operand}\n")
+            file.write('\n')
+            file.write("Litral Table\n")
+            file.write(f"{'Name':<15} {"Length":<10} {"Value":<10} {"Address":<10}\n")
+            file.write("----------------------------------------------\n")
+            for literal in self.literal:
+                file.write(f"{literal[0]:<15} {literal[1]:<10} {literal[0][3:]:<10} {self.location_counter:05X}\n")
+
+
+
+# Example Usage
 if __name__ == "__main__":
     assembler = Assembler()
     assembler.load_opcodes()
