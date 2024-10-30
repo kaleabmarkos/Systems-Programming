@@ -7,13 +7,12 @@ TOP:   RMO   X,A
         MUL   BUF1,X
         STA   BUF2,X
         TIX   MAX
-        JLT   TOP
+TOP:    EQU   SUBF+SUBR
         J      RETADDR
-BUF1:   RESW   512
+BUF1   RESW   512
 BUF2:   RESB   1536
 MAX:   WORD   512
 CHAR:   BYTE   =0CDCBA
 HEX:   BYTE   =0X12BA
 RETADDR:   RESW    1
         END   FIRST
-

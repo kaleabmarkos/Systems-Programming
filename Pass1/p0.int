@@ -1,0 +1,32 @@
+Sym Table
+PROGRAM:  00000  true
+FIRST:    00000  true
+TOP:      00013  true
+BUF2:     00016  true
+MAX:      00616  true
+CHAR:     00619  true
+HEX:      0061D  true
+RETADDR:  0061F  true
+
+Program Length is 00622 bytes
+
+Output Listing:
+LOCCTR     Symbol     Opcode     Operand
+--------------------------------------------------
+00000      PROGRAM:   START      0
+00000      FIRST:     LDB        #BUF2
+00003                 BASE       BUF 2
+00003                 STL        RETADDR
+00006                 CLEAR      X
+00008      TOP:       RMO        X,A
+0000A                 MUL        BUF1,X
+0000D                 STA        BUF2,X
+00010                 TIX        MAX
+00013      TOP:       EQU        SUBF+SUBR
+00013                 J          RETADDR
+00016                 BUF1       RESW 512
+00616      BUF2:      RESB       1536
+00619      MAX:       WORD       512
+0061D      CHAR:      BYTE       =0CDCBA
+0061F      HEX:       BYTE       =0X12BA
+00622      RETADDR:   RESW       1
